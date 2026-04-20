@@ -21,6 +21,7 @@ function normalizeGeneralSettings(raw: unknown): InstanceGeneralSettings {
     return {
       censorUsernameInLogs: parsed.data.censorUsernameInLogs ?? false,
       keyboardShortcuts: parsed.data.keyboardShortcuts ?? false,
+      locale: parsed.data.locale ?? "ko",
       feedbackDataSharingPreference:
         parsed.data.feedbackDataSharingPreference ?? DEFAULT_FEEDBACK_DATA_SHARING_PREFERENCE,
       backupRetention: parsed.data.backupRetention ?? DEFAULT_BACKUP_RETENTION,
@@ -29,6 +30,7 @@ function normalizeGeneralSettings(raw: unknown): InstanceGeneralSettings {
   return {
     censorUsernameInLogs: false,
     keyboardShortcuts: false,
+    locale: "ko",
     feedbackDataSharingPreference: DEFAULT_FEEDBACK_DATA_SHARING_PREFERENCE,
     backupRetention: DEFAULT_BACKUP_RETENTION,
   };
@@ -85,16 +87,7 @@ export function instanceSettingsService(db: Db) {
       })
       .returning();
 
-    if (created) return created;
-
-    const raced = await db
-      .select()
-      .from(instanceSettings)
-      .where(eq(instanceSettings.singletonKey, DEFAULT_SINGLETON_KEY))
-      .then((rows) => rows[0] ?? null);
-    if (raced) return raced;
-
-    throw new Error("Failed to initialize instance settings row");
+    return created;
   }
 
   return {

@@ -1,4 +1,5 @@
-import type { Issue } from "@paperclipai/shared";
+import { ISSUE_PRIORITIES, ISSUE_STATUSES, type Issue } from "@paperclipai/shared";
+import { humanizeEnumValue, translateEnum } from "../i18n";
 
 export type IssueFilterState = {
   statuses: string[];
@@ -26,14 +27,16 @@ export const issueStatusOrder = ["in_progress", "todo", "backlog", "in_review", 
 export const issuePriorityOrder = ["critical", "high", "medium", "low"];
 
 export const issueQuickFilterPresets = [
-  { label: "All", statuses: [] as string[] },
-  { label: "Active", statuses: ["todo", "in_progress", "in_review", "blocked"] },
-  { label: "Backlog", statuses: ["backlog"] },
-  { label: "Done", statuses: ["done", "cancelled"] },
+  { id: "all", statuses: [] as string[] },
+  { id: "active", statuses: ["todo", "in_progress", "in_review", "blocked"] },
+  { id: "backlog", statuses: ["backlog"] },
+  { id: "done", statuses: ["done", "cancelled"] },
 ];
 
 export function issueFilterLabel(value: string): string {
-  return value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+  if ((ISSUE_STATUSES as readonly string[]).includes(value)) return translateEnum("issue.status", value);
+  if ((ISSUE_PRIORITIES as readonly string[]).includes(value)) return translateEnum("issue.priority", value);
+  return humanizeEnumValue(value);
 }
 
 export function issueFilterArraysEqual(a: string[], b: string[]): boolean {

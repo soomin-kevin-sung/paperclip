@@ -134,7 +134,7 @@ function describeSchedule(cron: string): string {
     case "monthly":
       return `Monthly on the ${dayOfMonth}${ordinalSuffix(Number(dayOfMonth))} at ${timeStr}`;
     case "custom":
-      return cron || "No schedule set";
+      return cron || "설정된 일정 없음";
   }
 }
 

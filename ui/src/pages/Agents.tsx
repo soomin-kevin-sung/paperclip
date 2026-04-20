@@ -109,7 +109,7 @@ export function Agents() {
   }, [agents]);
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Agents" }]);
+    setBreadcrumbs([{ label: "에이전트" }]);
   }, [setBreadcrumbs]);
 
   if (!selectedCompanyId) {
@@ -194,7 +194,7 @@ export function Agents() {
           )}
           <Button size="sm" variant="outline" onClick={openNewAgent}>
             <Plus className="h-3.5 w-3.5 mr-1.5" />
-            New Agent
+            새 에이전트
           </Button>
         </div>
       </div>
@@ -208,8 +208,8 @@ export function Agents() {
       {agents && agents.length === 0 && (
         <EmptyState
           icon={Bot}
-          message="Create your first agent to get started."
-          action="New Agent"
+          message="첫 에이전트를 만들어 시작하세요."
+          action="새 에이전트"
           onAction={openNewAgent}
         />
       )}
@@ -273,7 +273,7 @@ export function Agents() {
 
       {effectiveView === "list" && agents && agents.length > 0 && filtered.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-8">
-          No agents match the selected filter.
+          선택한 필터와 일치하는 에이전트가 없습니다.
         </p>
       )}
 
@@ -288,13 +288,13 @@ export function Agents() {
 
       {effectiveView === "org" && orgTree && orgTree.length > 0 && filteredOrg.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-8">
-          No agents match the selected filter.
+          선택한 필터와 일치하는 에이전트가 없습니다.
         </p>
       )}
 
       {effectiveView === "org" && orgTree && orgTree.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-8">
-          No organizational hierarchy defined.
+          정의된 조직 계층이 없습니다.
         </p>
       )}
     </div>

@@ -1392,7 +1392,7 @@ export function RunTranscriptView({
   limit,
   streaming = false,
   collapseStdout = false,
-  emptyMessage = "No transcript yet.",
+  emptyMessage = "아직 트랜스크립트가 없습니다.",
   className,
   thinkingClassName,
 }: RunTranscriptViewProps) {

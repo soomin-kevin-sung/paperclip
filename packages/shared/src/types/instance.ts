@@ -3,6 +3,8 @@ import type { FeedbackDataSharingPreference } from "./feedback.js";
 export const DAILY_RETENTION_PRESETS = [3, 7, 14] as const;
 export const WEEKLY_RETENTION_PRESETS = [1, 2, 4] as const;
 export const MONTHLY_RETENTION_PRESETS = [1, 3, 6] as const;
+export const APP_LOCALES = ["en", "ko"] as const;
+export type AppLocale = (typeof APP_LOCALES)[number];
 
 export interface BackupRetentionPolicy {
   dailyDays: (typeof DAILY_RETENTION_PRESETS)[number];
@@ -19,6 +21,7 @@ export const DEFAULT_BACKUP_RETENTION: BackupRetentionPolicy = {
 export interface InstanceGeneralSettings {
   censorUsernameInLogs: boolean;
   keyboardShortcuts: boolean;
+  locale: AppLocale;
   feedbackDataSharingPreference: FeedbackDataSharingPreference;
   backupRetention: BackupRetentionPolicy;
 }

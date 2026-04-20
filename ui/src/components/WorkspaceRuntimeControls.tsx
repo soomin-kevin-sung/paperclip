@@ -364,8 +364,8 @@ export function WorkspaceRuntimeControls({
   items,
   isPending = false,
   pendingRequest = null,
-  serviceEmptyMessage = "No services are configured for this workspace.",
-  jobEmptyMessage = "No one-shot jobs are configured for this workspace.",
+  serviceEmptyMessage = "이 워크스페이스에 설정된 서비스가 없습니다.",
+  jobEmptyMessage = "이 워크스페이스에 설정된 일회성 작업이 없습니다.",
   emptyMessage,
   disabledHint = null,
   onAction,
@@ -401,12 +401,12 @@ export function WorkspaceRuntimeControls({
               )}
             >
               <Activity className="h-3.5 w-3.5" />
-              {runningCount > 0 ? `${runningCount} services running` : "No services running"}
+              {runningCount > 0 ? `서비스 ${runningCount}개 실행 중` : "실행 중인 서비스 없음"}
             </span>
             <span className="text-xs text-muted-foreground">
               {resolvedSections.jobs.length > 0
-                ? `${resolvedSections.jobs.length} job${resolvedSections.jobs.length === 1 ? "" : "s"} available to run on demand.`
-                : "Each command can be controlled independently."}
+                ? `필요할 때 실행할 수 있는 작업 ${resolvedSections.jobs.length}개가 있습니다.`
+                : "각 명령은 독립적으로 제어할 수 있습니다."}
             </span>
           </div>
           {visibleDisabledHint ? <p className="text-xs text-muted-foreground">{visibleDisabledHint}</p> : null}
@@ -414,8 +414,8 @@ export function WorkspaceRuntimeControls({
       </div>
 
       <CommandSection
-        title="Services"
-        description="Long-running commands that Paperclip can supervise for this workspace."
+        title="서비스"
+        description="Paperclip이 이 워크스페이스에서 계속 감시할 수 있는 장기 실행 명령입니다."
         items={resolvedSections.services}
         emptyMessage={resolvedServiceEmptyMessage}
         disabledHint={visibleDisabledHint}
@@ -426,8 +426,8 @@ export function WorkspaceRuntimeControls({
       />
 
       <CommandSection
-        title="Jobs"
-        description="One-shot commands that run now and exit when they finish."
+        title="작업"
+        description="지금 실행되고 완료되면 종료되는 일회성 명령입니다."
         items={resolvedSections.jobs}
         emptyMessage={jobEmptyMessage}
         isPending={isPending}
@@ -438,8 +438,8 @@ export function WorkspaceRuntimeControls({
 
       {resolvedSections.otherServices.length > 0 ? (
         <CommandSection
-          title="Untracked services"
-          description="Running services that no longer match the current workspace command config."
+          title="추적되지 않는 서비스"
+          description="현재 워크스페이스 명령 설정과 더 이상 일치하지 않는 실행 중 서비스입니다."
           items={resolvedSections.otherServices}
           emptyMessage=""
           isPending={isPending}

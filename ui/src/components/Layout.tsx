@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Outlet, useLocation, useNavigate, useNavigationType, useParams } from "@/lib/router";
+import { BookOpen, Moon, Settings, Sun } from "lucide-react";
+import { Link, Outlet, useLocation, useNavigate, useNavigationType, useParams } from "@/lib/router";
 import { CompanyRail } from "./CompanyRail";
 import { Sidebar } from "./Sidebar";
 import { InstanceSidebar } from "./InstanceSidebar";
-import { CompanySettingsSidebar } from "./CompanySettingsSidebar";
 import { BreadcrumbBar } from "./BreadcrumbBar";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { CommandPalette } from "./CommandPalette";
@@ -17,12 +17,13 @@ import { ToastViewport } from "./ToastViewport";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { WorktreeBanner } from "./WorktreeBanner";
 import { DevRestartBanner } from "./DevRestartBanner";
-import { SidebarAccountMenu } from "./SidebarAccountMenu";
 import { useDialog } from "../context/DialogContext";
 import { GeneralSettingsProvider } from "../context/GeneralSettingsContext";
 import { usePanel } from "../context/PanelContext";
 import { useCompany } from "../context/CompanyContext";
 import { useSidebar } from "../context/SidebarContext";
+import { useTheme } from "../context/ThemeContext";
+import { useI18n } from "../i18n";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useCompanyPageMemory } from "../hooks/useCompanyPageMemory";
 import { healthApi } from "../api/health";
@@ -34,12 +35,15 @@ import {
 } from "../lib/instance-settings";
 import {
   resetNavigationScroll,
+  SIDEBAR_SCROLL_RESET_STATE,
   shouldResetScrollOnNavigation,
 } from "../lib/navigation-scroll";
 import { queryKeys } from "../lib/queryKeys";
 import { scheduleMainContentFocus } from "../lib/main-content-focus";
 import { cn } from "../lib/utils";
 import { NotFoundPage } from "../pages/NotFound";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 const INSTANCE_SETTINGS_MEMORY_KEY = "paperclip.lastInstanceSettingsPath";
 
@@ -64,12 +68,13 @@ export function Layout() {
     selectionSource,
     setSelectedCompanyId,
   } = useCompany();
+  const { theme, toggleTheme } = useTheme();
+  const { setLocale, t } = useI18n();
   const { companyPrefix } = useParams<{ companyPrefix: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const navigationType = useNavigationType();
   const isInstanceSettingsRoute = location.pathname.startsWith("/instance/");
-  const isCompanySettingsRoute = location.pathname.includes("/company/settings");
   const onboardingTriggered = useRef(false);
   const lastMainScrollTop = useRef(0);
   const previousPathname = useRef<string | null>(null);
@@ -77,6 +82,7 @@ export function Layout() {
   const [mobileNavVisible, setMobileNavVisible] = useState(true);
   const [instanceSettingsTarget, setInstanceSettingsTarget] = useState<string>(() => readRememberedInstanceSettingsPath());
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const nextTheme = theme === "dark" ? "light" : "dark";
   const matchedCompany = useMemo(() => {
     if (!companyPrefix) return null;
     const requestedPrefix = companyPrefix.toUpperCase();
@@ -94,10 +100,17 @@ export function Layout() {
     },
     refetchIntervalInBackground: true,
   });
-  const keyboardShortcutsEnabled = useQuery({
+  const generalSettings = useQuery({
     queryKey: queryKeys.instance.generalSettings,
     queryFn: () => instanceSettingsApi.getGeneral(),
-  }).data?.keyboardShortcuts === true;
+  }).data;
+  const keyboardShortcutsEnabled = generalSettings?.keyboardShortcuts === true;
+
+  useEffect(() => {
+    if (generalSettings?.locale) {
+      setLocale(generalSettings.locale);
+    }
+  }, [generalSettings?.locale, setLocale]);
 
   useEffect(() => {
     if (companiesLoading || onboardingTriggered.current) return;
@@ -337,19 +350,53 @@ export function Layout() {
           >
             <div className="flex flex-1 min-h-0 overflow-hidden">
               <CompanyRail />
-              {isInstanceSettingsRoute ? (
-                <InstanceSidebar />
-              ) : isCompanySettingsRoute ? (
-                <CompanySettingsSidebar />
-              ) : (
-                <Sidebar />
-              )}
+              {isInstanceSettingsRoute ? <InstanceSidebar /> : <Sidebar />}
             </div>
-            <SidebarAccountMenu
-              deploymentMode={health?.deploymentMode}
-              instanceSettingsTarget={instanceSettingsTarget}
-              version={health?.version}
-            />
+            <div className="border-t border-r border-border px-3 py-2 bg-background">
+              <div className="flex items-center gap-1">
+                <a
+                  href="https://docs.paperclip.ing/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors text-foreground/80 hover:bg-accent/50 hover:text-foreground flex-1 min-w-0"
+                >
+                  <BookOpen className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{t("layout.documentation")}</span>
+                </a>
+                {health?.version && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="px-2 text-xs text-muted-foreground shrink-0 cursor-default">v</span>
+                    </TooltipTrigger>
+                    <TooltipContent>v{health.version}</TooltipContent>
+                  </Tooltip>
+                )}
+                <Button variant="ghost" size="icon-sm" className="text-muted-foreground shrink-0" asChild>
+                  <Link
+                    to={instanceSettingsTarget}
+                    state={SIDEBAR_SCROLL_RESET_STATE}
+                    aria-label={t("layout.instanceSettings")}
+                    title={t("layout.instanceSettings")}
+                    onClick={() => {
+                      if (isMobile) setSidebarOpen(false);
+                    }}
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground shrink-0"
+                  onClick={toggleTheme}
+                  aria-label={nextTheme === "dark" ? t("layout.switchThemeToDark") : t("layout.switchThemeToLight")}
+                  title={nextTheme === "dark" ? t("layout.switchThemeToDark") : t("layout.switchThemeToLight")}
+                >
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="flex h-full flex-col shrink-0">
@@ -361,20 +408,54 @@ export function Layout() {
                   sidebarOpen ? "w-60" : "w-0"
                 )}
               >
-                {isInstanceSettingsRoute ? (
-                  <InstanceSidebar />
-                ) : isCompanySettingsRoute ? (
-                  <CompanySettingsSidebar />
-                ) : (
-                  <Sidebar />
-                )}
+                {isInstanceSettingsRoute ? <InstanceSidebar /> : <Sidebar />}
               </div>
             </div>
-            <SidebarAccountMenu
-              deploymentMode={health?.deploymentMode}
-              instanceSettingsTarget={instanceSettingsTarget}
-              version={health?.version}
-            />
+            <div className="border-t border-r border-border px-3 py-2">
+              <div className="flex items-center gap-1">
+                <a
+                  href="https://docs.paperclip.ing/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors text-foreground/80 hover:bg-accent/50 hover:text-foreground flex-1 min-w-0"
+                >
+                  <BookOpen className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{t("layout.documentation")}</span>
+                </a>
+                {health?.version && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="px-2 text-xs text-muted-foreground shrink-0 cursor-default">v</span>
+                    </TooltipTrigger>
+                    <TooltipContent>v{health.version}</TooltipContent>
+                  </Tooltip>
+                )}
+                <Button variant="ghost" size="icon-sm" className="text-muted-foreground shrink-0" asChild>
+                  <Link
+                    to={instanceSettingsTarget}
+                    state={SIDEBAR_SCROLL_RESET_STATE}
+                    aria-label={t("layout.instanceSettings")}
+                    title={t("layout.instanceSettings")}
+                    onClick={() => {
+                      if (isMobile) setSidebarOpen(false);
+                    }}
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground shrink-0"
+                  onClick={toggleTheme}
+                  aria-label={nextTheme === "dark" ? t("layout.switchThemeToDark") : t("layout.switchThemeToLight")}
+                  title={nextTheme === "dark" ? t("layout.switchThemeToDark") : t("layout.switchThemeToLight")}
+                >
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
           </div>
         )}
 

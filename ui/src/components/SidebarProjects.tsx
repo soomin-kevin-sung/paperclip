@@ -192,7 +192,7 @@ export function SidebarProjects() {
               )}
             />
             <span className="text-[10px] font-medium uppercase tracking-widest font-mono text-muted-foreground/60">
-              Projects
+              프로젝트
             </span>
           </CollapsibleTrigger>
           <button

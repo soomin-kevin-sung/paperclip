@@ -174,6 +174,7 @@ export {
 } from "./network-bind.js";
 
 export type {
+  AppLocale,
   Company,
   FeedbackVote,
   FeedbackDataSharingPreference,
@@ -331,9 +332,10 @@ export type {
   AccessUserProfile,
   CompanyMemberRecord,
   CompanyMembersResponse,
-  CompanyMembership,
+  ArchiveCompanyMemberResponse,
   CompanyInviteListResponse,
   CompanyInviteRecord,
+  CompanyMembership,
   PrincipalPermissionGrant,
   Invite,
   JoinRequest,
@@ -435,6 +437,7 @@ export {
 } from "./types/feedback.js";
 
 export {
+  APP_LOCALES,
   DAILY_RETENTION_PRESETS,
   WEEKLY_RETENTION_PRESETS,
   MONTHLY_RETENTION_PRESETS,
@@ -537,7 +540,6 @@ export {
   upsertIssueDocumentSchema,
   restoreIssueDocumentRevisionSchema,
   type CreateIssue,
-  type CreateChildIssue,
   type CreateIssueLabel,
   type UpdateIssue,
   type CheckoutIssue,

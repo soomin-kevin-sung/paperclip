@@ -66,6 +66,11 @@ function AdapterRow({
   toggleTitleDisabled?: string;
   disabledBadgeLabel?: string;
 }) {
+  const sourceBadge = adapter.source === "external" ? "외부" : "내장";
+  const installBadge = disabledBadgeLabel ?? "메뉴에서 숨김";
+  const powerTitle = adapter.disabled
+    ? (toggleTitleEnabled ?? "에이전트 메뉴에 다시 표시")
+    : (toggleTitleDisabled ?? "에이전트 메뉴에서 숨기기");
   return (
     <li>
       <div className="flex items-center gap-4 px-4 py-3">
@@ -74,11 +79,11 @@ function AdapterRow({
             <span className={cn("font-medium", adapter.disabled && "text-muted-foreground line-through")}>
               {adapter.label || getAdapterLabel(adapter.type)}
             </span>
-            <Badge variant="outline">{adapter.source === "external" ? "External" : "Built-in"}</Badge>
+            <Badge variant="outline">{sourceBadge}</Badge>
             {adapter.source === "external" && (
               adapter.isLocalPath
-                ? <span title="Installed from local path"><FolderOpen className="h-4 w-4 text-amber-500" /></span>
-                : <span title="Installed from npm"><Package className="h-4 w-4 text-red-500" /></span>
+                ? <span title="로컬 경로에서 설치됨"><FolderOpen className="h-4 w-4 text-amber-500" /></span>
+                : <span title="npm에서 설치됨"><Package className="h-4 w-4 text-red-500" /></span>
             )}
             {adapter.version && (
               <Badge variant="secondary" className="font-mono text-[10px]">
@@ -87,17 +92,17 @@ function AdapterRow({
             )}
             {adapter.overriddenBuiltin && (
               <Badge variant="secondary" className="text-blue-600 border-blue-400">
-                Overrides built-in
+                내장 어댑터 덮어씀
               </Badge>
             )}
             {overriddenBy && (
               <Badge variant="secondary" className="text-blue-600 border-blue-400">
-                Overridden by {overriddenBy}
+                {overriddenBy}가 덮어씀
               </Badge>
             )}
             {adapter.disabled && (
               <Badge variant="secondary" className="text-amber-600 border-amber-400">
-                {disabledBadgeLabel ?? "Hidden from menus"}
+                {installBadge}
               </Badge>
             )}
           </div>
@@ -106,7 +111,7 @@ function AdapterRow({
             {adapter.packageName && adapter.packageName !== adapter.type && (
               <> · {adapter.packageName}</>
             )}
-            {" · "}{adapter.modelsCount} models
+            {" · "}모델 {adapter.modelsCount}개
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -115,7 +120,7 @@ function AdapterRow({
               variant="outline"
               size="icon-sm"
               className="h-8 w-8"
-              title="Reinstall adapter (pull latest from npm)"
+              title="어댑터 재설치 (npm 최신 버전 가져오기)"
               disabled={isReinstalling}
               onClick={() => onReinstall(adapter.type)}
             >
@@ -127,7 +132,7 @@ function AdapterRow({
               variant="outline"
               size="icon-sm"
               className="h-8 w-8"
-              title="Reload adapter (hot-swap)"
+              title="어댑터 다시 로드 (핫스왑)"
               disabled={isReloading}
               onClick={() => onReload(adapter.type)}
             >
@@ -138,9 +143,7 @@ function AdapterRow({
             variant="outline"
             size="icon-sm"
             className="h-8 w-8"
-            title={adapter.disabled
-              ? (toggleTitleEnabled ?? "Show in agent menus")
-              : (toggleTitleDisabled ?? "Hide from agent menus")}
+            title={powerTitle}
             disabled={isToggling}
             onClick={() => onToggle(adapter.type, !adapter.disabled)}
           >
@@ -151,7 +154,7 @@ function AdapterRow({
               variant="outline"
               size="icon-sm"
               className="h-8 w-8 text-destructive hover:text-destructive"
-              title="Remove adapter"
+              title="어댑터 제거"
               onClick={() => onRemove(adapter.type)}
             >
               <Trash2 className="h-4 w-4" />
@@ -359,12 +362,12 @@ export function AdapterManager() {
       invalidateConfigSchemaCache(result.type);
       pushToast({
         title: "Adapter reinstalled",
-        body: `Type "${result.type}" updated from npm.${result.version ? ` (v${result.version})` : ""}`,
+        body: `타입 "${result.type}"을 npm에서 업데이트했습니다.${result.version ? ` (v${result.version})` : ""}`,
         tone: "success",
       });
     },
     onError: (err: Error) => {
-      pushToast({ title: "Reinstall failed", body: err.message, tone: "error" });
+      pushToast({ title: "재설치 실패", body: err.message, tone: "error" });
     },
   });
 
@@ -388,7 +391,7 @@ export function AdapterManager() {
       menuDisabled: !!a.disabled,
     }));
 
-  if (isLoading) return <div className="p-4 text-sm text-muted-foreground">Loading adapters...</div>;
+  if (isLoading) return <div className="p-4 text-sm text-muted-foreground">어댑터를 불러오는 중...</div>;
 
   const isMutating = installMutation.isPending || removeMutation.isPending || toggleMutation.isPending || overrideMutation.isPending || reloadMutation.isPending || reinstallMutation.isPending;
 
@@ -398,7 +401,7 @@ export function AdapterManager() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Cpu className="h-6 w-6 text-muted-foreground" />
-          <h1 className="text-xl font-semibold">Adapters</h1>
+          <h1 className="text-xl font-semibold">어댑터</h1>
           <Badge variant="outline" className="text-amber-600 border-amber-400">
             Alpha
           </Badge>
@@ -408,14 +411,14 @@ export function AdapterManager() {
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
-              Install Adapter
+              어댑터 설치
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Install External Adapter</DialogTitle>
+              <DialogTitle>외부 어댑터 설치</DialogTitle>
               <DialogDescription>
-                Add an adapter from npm or a local path. The adapter package must export <code className="text-xs bg-muted px-1 py-0.5 rounded">createServerAdapter()</code>.
+                npm 또는 로컬 경로에서 어댑터를 추가합니다. 어댑터 패키지는 <code className="text-xs bg-muted px-1 py-0.5 rounded">createServerAdapter()</code>를 export해야 합니다.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -432,7 +435,7 @@ export function AdapterManager() {
                   onClick={() => setIsLocalPath(false)}
                 >
                   <Package className="h-3.5 w-3.5" />
-                  npm package
+                  npm 패키지
                 </button>
                 <button
                   type="button"
@@ -445,14 +448,14 @@ export function AdapterManager() {
                   onClick={() => setIsLocalPath(true)}
                 >
                   <FolderOpen className="h-3.5 w-3.5" />
-                  Local path
+                  로컬 경로
                 </button>
               </div>
 
               {isLocalPath ? (
                 /* Local path input */
                 <div className="grid gap-2">
-                  <Label htmlFor="adapterLocalPath">Path to adapter package</Label>
+                  <Label htmlFor="adapterLocalPath">어댑터 패키지 경로</Label>
                   <div className="flex gap-2">
                     <Input
                       id="adapterLocalPath"
@@ -464,14 +467,14 @@ export function AdapterManager() {
                     <ChoosePathButton />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Accepts Linux, WSL, and Windows paths. Windows paths are auto-converted.
+                    Linux, WSL, Windows 경로를 모두 지원합니다. Windows 경로는 자동 변환됩니다.
                   </p>
                 </div>
               ) : (
                 /* npm package input */
                 <>
                   <div className="grid gap-2">
-                    <Label htmlFor="adapterPackageName">Package Name</Label>
+                    <Label htmlFor="adapterPackageName">패키지 이름</Label>
                     <Input
                       id="adapterPackageName"
                       placeholder="my-paperclip-adapter"
@@ -480,7 +483,7 @@ export function AdapterManager() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="adapterVersion">Version (optional)</Label>
+                    <Label htmlFor="adapterVersion">버전 (선택)</Label>
                     <Input
                       id="adapterVersion"
                       placeholder="latest"
@@ -492,7 +495,7 @@ export function AdapterManager() {
               )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setInstallDialogOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setInstallDialogOpen(false)}>취소</Button>
               <Button
                 onClick={() =>
                   installMutation.mutate({
@@ -503,7 +506,7 @@ export function AdapterManager() {
                 }
                 disabled={!installPackage || installMutation.isPending}
               >
-                {installMutation.isPending ? "Installing..." : "Install"}
+                {installMutation.isPending ? "설치 중..." : "설치"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -515,10 +518,10 @@ export function AdapterManager() {
         <div className="flex items-start gap-3">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
           <div className="space-y-1 text-sm">
-            <p className="font-medium text-foreground">External adapters are alpha.</p>
+            <p className="font-medium text-foreground">외부 어댑터는 알파 단계입니다.</p>
             <p className="text-muted-foreground">
-              The adapter plugin system is under active development. APIs and storage format may change.
-              Use the power icon to hide adapters from agent menus without removing them.
+              어댑터 플러그인 시스템은 아직 활발히 개발 중입니다. API와 저장 형식이 바뀔 수 있습니다.
+              제거하지 않고 에이전트 메뉴에서만 숨기려면 전원 아이콘을 사용하세요.
             </p>
           </div>
         </div>
@@ -528,16 +531,16 @@ export function AdapterManager() {
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <Cpu className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-base font-semibold">External Adapters</h2>
+          <h2 className="text-base font-semibold">외부 어댑터</h2>
         </div>
 
         {externalAdapters.length === 0 ? (
           <Card className="bg-muted/30">
             <CardContent className="flex flex-col items-center justify-center py-10">
               <Cpu className="h-10 w-10 text-muted-foreground mb-4" />
-              <p className="text-sm font-medium">No external adapters installed</p>
+              <p className="text-sm font-medium">설치된 외부 어댑터가 없습니다</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Install an adapter package to extend model support.
+                모델 지원을 확장하려면 어댑터 패키지를 설치하세요.
               </p>
             </CardContent>
           </Card>
@@ -569,9 +572,9 @@ export function AdapterManager() {
                   isToggling={isBuiltinOverride ? overrideMutation.isPending : toggleMutation.isPending}
                   isReloading={reloadMutation.isPending}
                   isReinstalling={reinstallMutation.isPending}
-                  toggleTitleDisabled={isBuiltinOverride ? "Pause external override" : undefined}
-                  toggleTitleEnabled={isBuiltinOverride ? "Resume external override" : undefined}
-                  disabledBadgeLabel={isBuiltinOverride ? "Override paused" : undefined}
+                  toggleTitleDisabled={isBuiltinOverride ? "외부 덮어쓰기 일시중지" : undefined}
+                  toggleTitleEnabled={isBuiltinOverride ? "외부 덮어쓰기 재개" : undefined}
+                  disabledBadgeLabel={isBuiltinOverride ? "덮어쓰기 일시중지됨" : undefined}
                 />
               );
             })}
@@ -583,11 +586,11 @@ export function AdapterManager() {
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <Cpu className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-base font-semibold">Built-in Adapters</h2>
+          <h2 className="text-base font-semibold">내장 어댑터</h2>
         </div>
 
         {builtinAdapters.length === 0 && overriddenBuiltins.length === 0 ? (
-          <div className="text-sm text-muted-foreground">No built-in adapters found.</div>
+          <div className="text-sm text-muted-foreground">내장 어댑터가 없습니다.</div>
         ) : (
           <ul className="divide-y rounded-md border bg-card">
             {builtinAdapters.map((adapter) => (
@@ -635,18 +638,18 @@ export function AdapterManager() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove Adapter</DialogTitle>
+            <DialogTitle>어댑터 제거</DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove the <strong>{removeType}</strong> adapter?
-              It will be unregistered and removed from the adapter store.
+              <strong>{removeType}</strong> 어댑터를 정말 제거할까요?
+              어댑터 등록이 해제되고 저장소에서도 제거됩니다.
               {removeType && adapters?.find((a) => a.type === removeType)?.packageName && (
-                <> npm packages will be cleaned up from disk.</>
+                <> npm 패키지도 디스크에서 정리됩니다.</>
               )}
-              {" "}This action cannot be undone.
+              {" "}이 작업은 되돌릴 수 없습니다.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRemoveType(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setRemoveType(null)}>취소</Button>
             <Button
               variant="destructive"
               disabled={removeMutation.isPending}
@@ -658,7 +661,7 @@ export function AdapterManager() {
                 }
               }}
             >
-              {removeMutation.isPending ? "Removing..." : "Remove"}
+              {removeMutation.isPending ? "제거 중..." : "제거"}
             </Button>
           </DialogFooter>
         </DialogContent>
