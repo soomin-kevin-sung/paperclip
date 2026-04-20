@@ -20,7 +20,8 @@ const uiCandidates = [
 const hasServerBuild = existsSync(serverEntry);
 const tsxCli = tsxCandidates.find((candidate) => existsSync(candidate)) ?? null;
 const resolvedUi = uiCandidates.find((candidate) => existsSync(candidate)) ?? null;
-const checkOnly = process.argv.includes("--check");
+const forwardedArgs = process.argv.slice(2);
+const checkOnly = forwardedArgs.includes("--check");
 
 if (!hasServerBuild) {
   console.error("Missing server build output: server/dist/index.js");
@@ -46,7 +47,7 @@ if (checkOnly) {
   process.exit(0);
 }
 
-const child = spawn(process.execPath, [tsxCli, serverEntry], {
+const child = spawn(process.execPath, [tsxCli, serverEntry, ...forwardedArgs], {
   cwd: serverDir,
   stdio: "inherit",
   env: process.env,
