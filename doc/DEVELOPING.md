@@ -39,6 +39,14 @@ This starts:
 
 `pnpm dev` runs the server in watch mode and restarts on changes from workspace packages (including adapter packages). Use `pnpm dev:once` to run without file watching.
 
+After a successful build, start the built artifacts from the repo root with:
+
+```sh
+pnpm start
+```
+
+This runs the compiled server from `server/dist` and serves the built UI from `server/ui-dist` or `ui/dist`.
+
 `pnpm dev:once` auto-applies pending local migrations by default before starting the dev server.
 
 `pnpm dev` and `pnpm dev:once` are now idempotent for the current repo and instance: if the matching Paperclip dev runner is already alive, Paperclip reports the existing process instead of starting a duplicate.
