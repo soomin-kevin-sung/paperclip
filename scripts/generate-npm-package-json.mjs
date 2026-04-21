@@ -1,19 +1,15 @@
 #!/usr/bin/env node
 /**
- * generate-npm-package-json.mjs
+ * Generate a publishable CLI package.json from the development manifest.
  *
- * Reads the dev package.json (which has workspace:* refs) and produces
- * a publishable package.json in cli/ with:
- *   - workspace:* dependencies removed
- *   - all external dependencies from workspace packages inlined
- *   - proper metadata for npm
- *
- * Reads from cli/package.dev.json if it exists (build already ran),
- * otherwise from cli/package.json.
+ * The packaged CLI now vendors the local server/ui build, but that vendored
+ * server still imports several published Paperclip workspace packages at
+ * runtime. This script rewrites all internal workspace deps to exact versions
+ * and collects the external npm deps required by the bundled runtime graph.
  */
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -23,44 +19,35 @@ function readPkg(relativePath) {
   return JSON.parse(readFileSync(resolve(repoRoot, relativePath, "package.json"), "utf8"));
 }
 
-// Read all workspace packages that are BUNDLED into the CLI.
-// Note: "server" is excluded — it's published separately as a dependency.
-const workspacePaths = [
+const runtimeWorkspacePaths = [
   "cli",
+  "server",
   "packages/db",
   "packages/shared",
   "packages/adapter-utils",
   "packages/adapters/claude-local",
   "packages/adapters/codex-local",
+  "packages/adapters/cursor-local",
+  "packages/adapters/gemini-local",
   "packages/adapters/opencode-local",
   "packages/adapters/openclaw-gateway",
+  "packages/adapters/pi-local",
+  "packages/plugins/sdk",
 ];
 
-// Workspace packages that are NOT bundled and must stay as npm dependencies.
-// These get published separately and resolved at runtime.
-const externalWorkspacePackages = new Set([
-  "@paperclipai/server",
-]);
-
-// Collect all external dependencies from all workspace packages
 const allDeps = {};
 const allOptionalDeps = {};
 
-for (const pkgPath of workspacePaths) {
+for (const pkgPath of runtimeWorkspacePaths) {
   const pkg = readPkg(pkgPath);
   const deps = pkg.dependencies || {};
   const optDeps = pkg.optionalDependencies || {};
 
   for (const [name, version] of Object.entries(deps)) {
-    if (name.startsWith("@paperclipai/") && !externalWorkspacePackages.has(name)) continue;
-    // For external workspace packages, read their version directly
-    if (externalWorkspacePackages.has(name)) {
-      const pkgDirMap = { "@paperclipai/server": "server" };
-      const wsPkg = readPkg(pkgDirMap[name]);
-      allDeps[name] = wsPkg.version;
+    if (name.startsWith("@paperclipai/")) {
       continue;
     }
-    // Keep the more specific (pinned) version if conflict
+
     if (!allDeps[name] || !version.startsWith("^")) {
       allDeps[name] = version;
     }
@@ -71,19 +58,16 @@ for (const pkgPath of workspacePaths) {
   }
 }
 
-// Sort alphabetically
 const sortedDeps = Object.fromEntries(Object.entries(allDeps).sort(([a], [b]) => a.localeCompare(b)));
 const sortedOptDeps = Object.fromEntries(
   Object.entries(allOptionalDeps).sort(([a], [b]) => a.localeCompare(b)),
 );
 
-// Read the CLI package metadata — prefer the dev backup if it exists
 const devPkgPath = resolve(repoRoot, "cli/package.dev.json");
 const cliPkg = existsSync(devPkgPath)
   ? JSON.parse(readFileSync(devPkgPath, "utf8"))
   : readPkg("cli");
 
-// Build the publishable package.json
 const publishPkg = {
   name: cliPkg.name,
   version: cliPkg.version,
@@ -95,7 +79,7 @@ const publishPkg = {
   repository: cliPkg.repository,
   homepage: cliPkg.homepage,
   bugs: cliPkg.bugs,
-  files: cliPkg.files,
+  files: Array.isArray(cliPkg.files) ? cliPkg.files : ["dist", "vendor"],
   engines: { node: ">=20" },
   dependencies: sortedDeps,
 };
@@ -104,9 +88,7 @@ if (Object.keys(sortedOptDeps).length > 0) {
   publishPkg.optionalDependencies = sortedOptDeps;
 }
 
-const output = JSON.stringify(publishPkg, null, 2) + "\n";
-const outPath = resolve(repoRoot, "cli/package.json");
-writeFileSync(outPath, output);
+writeFileSync(resolve(repoRoot, "cli/package.json"), `${JSON.stringify(publishPkg, null, 2)}\n`);
 
-console.log(`  ✓  Generated publishable package.json (${Object.keys(sortedDeps).length} deps)`);
-console.log(`     Version: ${cliPkg.version}`);
+console.log(`  Generated publishable package.json (${Object.keys(sortedDeps).length} deps)`);
+console.log(`  Version: ${cliPkg.version}`);

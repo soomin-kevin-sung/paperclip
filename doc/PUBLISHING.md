@@ -19,10 +19,13 @@ Paperclip no longer uses release branches or Changesets for publishing.
 
 The CLI package, `paperclipai`, imports code from workspace packages such as:
 
-- `@paperclipai/server`
 - `@paperclipai/db`
 - `@paperclipai/shared`
 - adapter packages under `packages/adapters/`
+
+The packaged CLI also vendors the built `server/dist`, `ui/dist`, and root `skills/`
+tree under `cli/vendor/server/` so a local `.tgz` install runs the same server/UI
+build that was produced from the current checkout.
 
 Those workspace references are valid in development but not in a publishable npm package. The release flow rewrites versions temporarily, then builds a publishable CLI bundle.
 
@@ -40,8 +43,9 @@ This script:
 2. runs `pnpm -r typecheck`
 3. bundles the CLI entrypoint with esbuild into `cli/dist/index.js`
 4. verifies the bundled entrypoint with `node --check`
-5. rewrites `cli/package.json` into a publishable npm manifest and stores the dev copy as `cli/package.dev.json`
-6. copies the repo `README.md` into `cli/README.md` for npm metadata
+5. copies the local server/UI/skills runtime into `cli/vendor/server/`
+6. rewrites `cli/package.json` into a publishable npm manifest and stores the dev copy as `cli/package.dev.json`
+7. copies the repo `README.md` into `cli/README.md` for npm metadata
 
 After the release script exits, the dev manifest and temporary files are restored automatically.
 
