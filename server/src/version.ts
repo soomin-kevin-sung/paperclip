@@ -5,6 +5,12 @@ type PackageJson = {
 };
 
 const require = createRequire(import.meta.url);
-const pkg = require("../package.json") as PackageJson;
+let pkg: PackageJson = {};
+
+try {
+  pkg = require("../package.json") as PackageJson;
+} catch {
+  pkg = {};
+}
 
 export const serverVersion = pkg.version ?? "0.0.0";

@@ -15,6 +15,7 @@ const bundledSkills = path.join(bundledServerRoot, "skills");
 const bundledNodeModules = path.join(bundledRoot, "node_modules");
 
 const serverDist = path.join(repoRoot, "server", "dist");
+const serverPackageJsonPath = path.join(repoRoot, "server", "package.json");
 const uiDist = path.join(repoRoot, "ui", "dist");
 const rootSkills = path.join(repoRoot, "skills");
 
@@ -65,6 +66,7 @@ function buildRuntimePackageJson(pkg) {
 }
 
 assertExists(serverDist, "Built server dist");
+assertExists(serverPackageJsonPath, "Server package.json");
 assertExists(uiDist, "Built UI dist");
 assertExists(rootSkills, "Root skills directory");
 
@@ -73,6 +75,7 @@ resetDir(bundledRoot);
 fs.cpSync(serverDist, bundledServerDist, { recursive: true });
 fs.cpSync(uiDist, bundledUiDist, { recursive: true });
 fs.cpSync(rootSkills, bundledSkills, { recursive: true });
+writeJson(path.join(bundledServerRoot, "package.json"), buildRuntimePackageJson(readJson(serverPackageJsonPath)));
 
 for (const relativePkgPath of vendoredWorkspacePackages) {
   const packageRoot = path.join(repoRoot, relativePkgPath);
