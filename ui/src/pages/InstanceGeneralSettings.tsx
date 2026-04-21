@@ -76,7 +76,7 @@ export function InstanceGeneralSettings() {
 
   const censorUsernameInLogs = generalQuery.data?.censorUsernameInLogs === true;
   const keyboardShortcuts = generalQuery.data?.keyboardShortcuts === true;
-  const locale = generalQuery.data?.locale ?? "en";
+  const locale = generalQuery.data?.locale ?? "ko";
   const feedbackDataSharingPreference = generalQuery.data?.feedbackDataSharingPreference ?? "prompt";
   const backupRetention: BackupRetentionPolicy = generalQuery.data?.backupRetention ?? DEFAULT_BACKUP_RETENTION;
 

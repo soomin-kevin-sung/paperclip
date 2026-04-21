@@ -182,6 +182,14 @@ async function importServerEntry(): Promise<StartedServer> {
     return await startServerFromModule(mod, devEntry);
   }
 
+  // Packaged mode: prefer the server build bundled inside the CLI tarball.
+  const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  const bundledEntry = path.resolve(packageRoot, "vendor/server/dist/index.js");
+  if (fs.existsSync(bundledEntry)) {
+    const mod = await import(pathToFileURL(bundledEntry).href);
+    return await startServerFromModule(mod, bundledEntry);
+  }
+
   // Production mode: import the published @paperclipai/server package
   try {
     const mod = await import("@paperclipai/server");

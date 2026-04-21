@@ -27,6 +27,8 @@ packages/db/seed-*.mjs
 
 # npm publish build artifacts
 cli/package.dev.json
+cli/vendor/
+cli/*.tgz
 
 # Build artifacts in src directories
 server/src/**/*.js

@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { APP_LOCALES, type AppLocale } from "@paperclipai/shared";
+import { type AppLocale } from "@paperclipai/shared";
 import { messages } from "./messages";
 
 type MessageValues = Record<string, string | number | null | undefined>;
@@ -16,13 +16,6 @@ const LOCALE_STORAGE_KEY = "paperclip.locale";
 const DEFAULT_LOCALE: AppLocale = "ko";
 
 let activeLocale: AppLocale = DEFAULT_LOCALE;
-
-function coerceLocale(value: string | null | undefined): AppLocale | null {
-  if (!value) return null;
-  const normalized = value.trim().toLowerCase();
-  const base = normalized.split("-")[0];
-  return APP_LOCALES.includes(base as AppLocale) ? (base as AppLocale) : null;
-}
 
 function interpolate(template: string, values?: MessageValues): string {
   if (!values) return template;
@@ -39,15 +32,6 @@ export function setActiveLocale(locale: AppLocale) {
 
 export function getActiveLocale(): AppLocale {
   return activeLocale;
-}
-
-export function getBrowserLocale(): AppLocale {
-  if (typeof navigator === "undefined") return DEFAULT_LOCALE;
-  for (const candidate of navigator.languages ?? []) {
-    const locale = coerceLocale(candidate);
-    if (locale) return locale;
-  }
-  return coerceLocale(navigator.language) ?? DEFAULT_LOCALE;
 }
 
 export function humanizeEnumValue(value: string): string {
@@ -80,14 +64,7 @@ const I18nContext = createContext<I18nContextValue>({
 });
 
 function readInitialLocale(): AppLocale {
-  if (typeof window === "undefined") return DEFAULT_LOCALE;
-  try {
-    const stored = coerceLocale(window.localStorage.getItem(LOCALE_STORAGE_KEY));
-    if (stored) return stored;
-  } catch {
-    // ignore storage errors
-  }
-  return getBrowserLocale();
+  return DEFAULT_LOCALE;
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {

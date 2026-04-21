@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="ko" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -22,14 +22,9 @@
     <script>
       (() => {
         const key = "paperclip.theme";
-        const localeKey = "paperclip.locale";
         const darkThemeColor = "#18181b";
         const lightThemeColor = "#ffffff";
         try {
-          const storedLocale = window.localStorage.getItem(localeKey);
-          if (storedLocale === "en" || storedLocale === "ko") {
-            document.documentElement.lang = storedLocale;
-          }
           const stored = window.localStorage.getItem(key);
           const theme = stored === "light" || stored === "dark" ? stored : "dark";
           const isDark = theme === "dark";
